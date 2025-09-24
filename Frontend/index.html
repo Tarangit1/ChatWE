@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatWE - Simple Chat App</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Login/Register Page -->
+    <div id="auth-page" class="page">
+        <div class="auth-container">
+            <h1>BYTEchat</h1>
+            
+            <!-- Login Form -->
+            <div id="login-form" class="form-container">
+                <h2>Login</h2>
+                <form id="loginForm">
+                    <input type="email" id="loginEmail" placeholder="Email" required>
+                    <input type="password" id="loginPassword" placeholder="Password" required>
+                    <button type="submit">Login</button>
+                </form>
+                <p>Don't have an account? <a href="#" onclick="showRegister()">Register</a></p>
+            </div>
+
+            <!-- Register Form -->
+            <div id="register-form" class="form-container hidden">
+                <h2>Register</h2>
+                <form id="registerForm">
+                    <input type="text" id="registerUsername" placeholder="Username" required>
+                    <input type="email" id="registerEmail" placeholder="Email" required>
+                    <input type="password" id="registerPassword" placeholder="Password" required>
+                    <button type="submit">Register</button>
+                </form>
+                <p>Already have an account? <a href="#" onclick="showLogin()">Login</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Page -->
+    <div id="chat-page" class="page hidden">
+        <div class="chat-container">
+            <!-- Header -->
+            <header class="chat-header">
+                <h1>ChatWE</h1>
+                <div class="user-info">
+                    <button id="darkModeToggle" onclick="toggleDarkMode()" title="Toggle Dark Mode">🌙</button>
+                    <span id="username">User</span>
+                    <button onclick="logout()">Logout</button>
+                </div>
+            </header>
+
+            <!-- Main Chat Area -->
+            <div class="chat-main">
+                <!-- Rooms Sidebar -->
+                <div class="rooms-sidebar">
+                    <div class="rooms-header">
+                        <h3>Rooms</h3>
+                        <button onclick="showCreateRoom()">+</button>
+                    </div>
+                    <div id="rooms-list" class="rooms-list">
+                        <!-- Rooms will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Chat Area -->
+                <div class="chat-area">
+                    <div class="chat-room-header">
+                        <h3 id="current-room-name">Select a room</h3>
+                        <span id="room-member-count"></span>
+                    </div>
+                    
+                    <div id="messages-container" class="messages-container">
+                        <!-- Messages will be displayed here -->
+                    </div>
+
+                    <div class="message-input-container">
+                        <div id="typing-indicator-container"></div>
+                        <div class="message-input-row">
+                            <input type="text" id="messageInput" placeholder="Type a message..." disabled>
+                            <button id="sendButton" onclick="sendMessage()" disabled>Send</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Room Modal -->
+    <div id="create-room-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>Create Room</h3>
+           
+            <form id="createRoomForm">
+                <input type="text" id="roomName" placeholder="Room Name" required>
+                <textarea id="roomDescription" placeholder="Room Description (optional)"></textarea>
+                <div class="modal-buttons">
+                    <button type="button" onclick="hideCreateRoom()">Cancel</button>
+                    <button type="submit">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Error/Success Messages -->
+    <div id="message-toast" class="toast hidden">
+        <span id="toast-text"></span>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
