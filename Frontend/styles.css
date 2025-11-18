@@ -363,6 +363,103 @@ body {
     box-shadow: none;
 }
 
+/* AI Recommendations Styles */
+.ai-recommendations-container {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.ai-recommendations-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.ai-icon {
+    font-size: 18px;
+}
+
+.ai-text {
+    font-weight: 600;
+    color: #475569;
+    font-size: 14px;
+    flex: 1;
+}
+
+.ai-refresh-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 4px;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+}
+
+.ai-refresh-btn:hover {
+    background: #e2e8f0;
+}
+
+.ai-recommendations-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.ai-suggestion {
+    background: linear-gradient(135deg, #743fb1 0%, #8b5cf6 100%);
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    max-width: 200px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.ai-suggestion:hover {
+    background: linear-gradient(135deg, #6d28d9 0%, #7c3aed 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(116, 63, 177, 0.3);
+}
+
+.ai-suggestion:active {
+    transform: translateY(0);
+}
+
+.ai-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    color: #64748b;
+    font-size: 14px;
+}
+
+.ai-loading::before {
+    content: "🤖";
+    margin-right: 8px;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
 /* System Messages */
 .message.system {
     background-color: #e3f2fd;
@@ -788,6 +885,28 @@ body.dark-mode .message-input-container input:focus {
 }
 
 body.dark-mode .message-input-container input::placeholder {
+    color: #a0aec0;
+}
+
+/* AI Recommendations Dark Mode */
+body.dark-mode .ai-recommendations-container {
+    background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+    border-color: #4a5568;
+}
+
+body.dark-mode .ai-recommendations-header {
+    border-bottom-color: #4a5568;
+}
+
+body.dark-mode .ai-text {
+    color: #e2e8f0;
+}
+
+body.dark-mode .ai-refresh-btn:hover {
+    background: #4a5568;
+}
+
+body.dark-mode .ai-loading {
     color: #a0aec0;
 }
 

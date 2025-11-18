@@ -211,6 +211,7 @@ function initializeSocket() {
     socket.on('new-message', (messageData) => {
         if (currentRoom) {
             displayMessage(messageData);
+            onMessageReceived();
         }
     });
 
@@ -324,6 +325,9 @@ async function joinRoom(room) {
         if (socket) {
             socket.emit('join-room', { roomId: room._id });
         }
+        
+        // Load AI recommendations for this room
+        await loadAIRecommendations();
         
     } catch (error) {
         showToast('Failed to join room', 'error');
@@ -547,3 +551,105 @@ window.addEventListener('beforeunload', () => {
         socket.disconnect();
     }
 });
+
+// AI Recommendations functionality
+let aiRecommendationsVisible = false;
+
+// Function to load and display AI recommendations
+async function loadAIRecommendations() {
+    if (!currentRoom || !token) {
+        hideAIRecommendations();
+        return;
+    }
+
+    const container = document.getElementById('ai-recommendations-container');
+    const listContainer = document.getElementById('ai-recommendations-list');
+    
+    // Show loading state
+    listContainer.innerHTML = '<div class="ai-loading">Generating smart suggestions...</div>';
+    container.classList.remove('hidden');
+    aiRecommendationsVisible = true;
+
+    try {
+        const response = await fetch(`${API_BASE}/api/ai/recommendations`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                roomId: currentRoom._id
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch recommendations');
+        }
+
+        const data = await response.json();
+        displayAIRecommendations(data.recommendations);
+    } catch (error) {
+        console.error('Error loading AI recommendations:', error);
+        listContainer.innerHTML = '<div class="ai-loading" style="color: #ef4444;">Failed to load suggestions</div>';
+    }
+}
+
+// Function to display AI recommendations
+function displayAIRecommendations(recommendations) {
+    const listContainer = document.getElementById('ai-recommendations-list');
+    
+    if (!recommendations || recommendations.length === 0) {
+        listContainer.innerHTML = '<div class="ai-loading">No suggestions available</div>';
+        return;
+    }
+
+    listContainer.innerHTML = recommendations
+        .map(suggestion => 
+            `<button class="ai-suggestion" onclick="useAISuggestion('${suggestion.replace(/'/g, "\\'")}')">
+                ${suggestion}
+            </button>`
+        )
+        .join('');
+}
+
+// Function to use an AI suggestion
+function useAISuggestion(suggestion) {
+    const messageInput = document.getElementById('messageInput');
+    messageInput.value = suggestion;
+    messageInput.focus();
+    
+    // Optionally auto-send the message
+    // sendMessage();
+}
+
+// Function to refresh AI recommendations
+async function refreshAIRecommendations() {
+    if (currentRoom) {
+        await loadAIRecommendations();
+    }
+}
+
+// Function to hide AI recommendations
+function hideAIRecommendations() {
+    const container = document.getElementById('ai-recommendations-container');
+    container.classList.add('hidden');
+    aiRecommendationsVisible = false;
+}
+
+// Function to show AI recommendations
+function showAIRecommendations() {
+    if (currentRoom) {
+        loadAIRecommendations();
+    }
+}
+
+// Enhanced message handling to trigger AI recommendations
+function onMessageReceived() {
+    // Load new recommendations when messages are received (debounced)
+    if (aiRecommendationsVisible && currentRoom) {
+        clearTimeout(window.aiRefreshTimeout);
+        window.aiRefreshTimeout = setTimeout(() => {
+            loadAIRecommendations();
+        }, 2000); // Wait 2 seconds after last message
+    }
+}

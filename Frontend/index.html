@@ -76,6 +76,19 @@
 
                     <div class="message-input-container">
                         <div id="typing-indicator-container"></div>
+                        
+                        <!-- AI Recommendations -->
+                        <div id="ai-recommendations-container" class="ai-recommendations-container hidden">
+                            <div class="ai-recommendations-header">
+                                <span class="ai-icon">🤖</span>
+                                <span class="ai-text">AI Suggestions</span>
+                                <button id="ai-refresh-btn" class="ai-refresh-btn" onclick="refreshAIRecommendations()">🔄</button>
+                            </div>
+                            <div id="ai-recommendations-list" class="ai-recommendations-list">
+                                <!-- AI suggestions will be populated here -->
+                            </div>
+                        </div>
+                        
                         <div class="message-input-row">
                             <input type="text" id="messageInput" placeholder="Type a message..." disabled>
                             <button id="sendButton" onclick="sendMessage()" disabled>Send</button>

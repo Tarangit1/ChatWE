@@ -33,6 +33,15 @@ const roomSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    accessKey: {
+        type: String,
+        sparse: true, // Only index non-null values
+        unique: true
+    },
+    keyExpiresAt: {
+        type: Date,
+        default: null
+    },
     maxMembers: {
         type: Number,
         default: 100
@@ -53,6 +62,25 @@ const roomSchema = new mongoose.Schema({
 roomSchema.methods.updateActivity = function() {
     this.lastActivity = new Date();
     return this.save();
+};
+
+// Generate unique access key for private rooms
+roomSchema.methods.generateAccessKey = function() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = '';
+    for (let i = 0; i < 8; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    this.accessKey = result;
+    return result;
+};
+
+// Check if access key is valid
+roomSchema.methods.isValidAccessKey = function(key) {
+    if (!this.isPrivate) return true;
+    if (!this.accessKey) return false;
+    if (this.keyExpiresAt && this.keyExpiresAt < new Date()) return false;
+    return this.accessKey === key;
 };
 
 // Get active members count

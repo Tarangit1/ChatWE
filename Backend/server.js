@@ -14,16 +14,17 @@ import jwt from 'jsonwebtoken';
 // Import routes and models
 import authRoutes from './routes/auth.js';
 import roomRoutes from './routes/rooms.js';
+import aiRoutes from './routes/ai.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import User from './models/User.js';
 import Room from './models/Room.js';
 import Message from './models/Message.js';
 
-// Load environment variables
-dotenv.config();
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Load environment variables
+dotenv.config({ path: path.resolve(__dirname, '.env') });
 
 const app = express();
 const server = createServer(app);
@@ -76,6 +77,7 @@ const activeUsers = new Map(); // socketId -> { userId, username, roomId }
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/rooms', roomRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

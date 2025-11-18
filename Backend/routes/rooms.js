@@ -18,7 +18,15 @@ const createRoomValidation = [
     body('description')
         .optional()
         .isLength({ max: 200 })
-        .withMessage('Description cannot exceed 200 characters')
+        .withMessage('Description cannot exceed 200 characters'),
+    body('isPrivate')
+        .optional()
+        .isBoolean()
+        .withMessage('isPrivate must be a boolean'),
+    body('keyExpiration')
+        .optional()
+        .isISO8601()
+        .withMessage('Key expiration must be a valid date')
 ];
 
 // Get all public rooms
@@ -101,7 +109,7 @@ router.get('/:id', async (req, res) => {
 // Create new room
 router.post('/', authenticateToken, createRoomValidation, handleValidationErrors, async (req, res) => {
     try {
-        const { name, description, isPrivate = false, tags = [] } = req.body;
+        const { name, description, isPrivate = false, tags = [], keyExpiration = null } = req.body;
 
         // Check if room name already exists
         const existingRoom = await Room.findOne({ 
@@ -127,6 +135,15 @@ router.post('/', authenticateToken, createRoomValidation, handleValidationErrors
             }]
         });
 
+        // Generate access key for private rooms
+        let accessKey = null;
+        if (isPrivate) {
+            accessKey = room.generateAccessKey();
+            if (keyExpiration) {
+                room.keyExpiresAt = new Date(keyExpiration);
+            }
+        }
+
         await room.save();
         await room.populate('createdBy', 'username avatar');
 
@@ -141,7 +158,8 @@ router.post('/', authenticateToken, createRoomValidation, handleValidationErrors
             room: {
                 ...room.toObject(),
                 memberCount: room.members.length
-            }
+            },
+            accessKey: accessKey // Include access key in response for private rooms
         });
     } catch (error) {
         res.status(500).json({
@@ -155,6 +173,7 @@ router.post('/', authenticateToken, createRoomValidation, handleValidationErrors
 // Join room
 router.post('/:id/join', authenticateToken, async (req, res) => {
     try {
+        const { accessKey } = req.body;
         const room = await Room.findById(req.params.id);
 
         if (!room) {
@@ -164,12 +183,21 @@ router.post('/:id/join', authenticateToken, async (req, res) => {
             });
         }
 
-        // Check if room is private (we'll allow joining public rooms automatically)
+        // Check if room is private and validate access key
         if (room.isPrivate) {
-            return res.status(403).json({
-                success: false,
-                message: 'Cannot join private room without invitation'
-            });
+            if (!accessKey) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Access key required for private room'
+                });
+            }
+
+            if (!room.isValidAccessKey(accessKey)) {
+                return res.status(403).json({
+                    success: false,
+                    message: 'Invalid or expired access key'
+                });
+            }
         }
 
         // Check if user is already a member
@@ -291,6 +319,74 @@ router.get('/:id/messages', async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Failed to fetch messages',
+            error: error.message
+        });
+    }
+});
+
+// Join room by access key
+router.post('/join-by-key', authenticateToken, async (req, res) => {
+    try {
+        const { accessKey } = req.body;
+
+        if (!accessKey) {
+            return res.status(400).json({
+                success: false,
+                message: 'Access key is required'
+            });
+        }
+
+        const room = await Room.findOne({ accessKey }).populate('createdBy', 'username');
+
+        if (!room) {
+            return res.status(404).json({
+                success: false,
+                message: 'Invalid access key'
+            });
+        }
+
+        // Check if key is expired
+        if (room.keyExpiresAt && room.keyExpiresAt < new Date()) {
+            return res.status(403).json({
+                success: false,
+                message: 'Access key has expired'
+            });
+        }
+
+        // Check if user is already a member
+        const isMember = room.members.some(member => 
+            member.user.toString() === req.user._id.toString()
+        );
+
+        if (!isMember) {
+            // Add user to room members
+            room.members.push({
+                user: req.user._id,
+                joinedAt: new Date()
+            });
+
+            await room.save();
+            await room.updateActivity();
+
+            // Add room to user's joined rooms
+            await User.findByIdAndUpdate(req.user._id, {
+                $addToSet: { joinedRooms: room._id }
+            });
+        }
+
+        res.json({
+            success: true,
+            message: 'Successfully joined room',
+            room: {
+                ...room.toObject(),
+                memberCount: room.members.length,
+                accessKey: undefined // Don't return access key in response
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Failed to join room',
             error: error.message
         });
     }
